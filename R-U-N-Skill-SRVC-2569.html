@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>โครงการพัฒนาทักษะและสมรรถนะวิชาชีพกำลังคน R-U-N Skill</title>
+    
+    <!-- นำเข้า Tailwind CSS สำหรับการจัดการความสวยงาม -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- นำเข้าฟอนต์ Noto Sans Thai จาก Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- นำเข้า Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-slate-50 text-slate-800">
+
+    <!-- Header / Hero Section -->
+    <header class="bg-gradient-to-r from-blue-900 to-blue-700 text-white py-16 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="flex items-center gap-2 text-blue-200 font-medium mb-4">
+                <i data-lucide="badge-dollar-sign" class="w-5 h-5"></i>
+                <span>งบประมาณอุดหนุน สอศ. ประจำปี 2569</span>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-bold leading-tight mb-4">
+                โครงการพัฒนาทักษะและสมรรถนะ<br class="hidden md:block"/>วิชาชีพกำลังคนยุคดิจิทัล
+            </h1>
+            <div class="inline-block bg-white text-blue-900 px-6 py-2 rounded-full font-bold text-xl mb-6 shadow-lg">
+                R-U-N Skill (Reskill • Upskill • Newskill)
+            </div>
+            <p class="text-xl text-blue-100 max-w-2xl">
+                โดย วิทยาลัยอาชีวศึกษาสุรินทร์ <br/>
+                ยกระดับกำลังคนอาชีวศึกษาให้พร้อมรับมือ Digital Disruption และตอบโจทย์อุตสาหกรรม S-Curve
+            </p>
+        </div>
+    </header>
+
+    <!-- Key Metrics - Executive Summary -->
+    <section class="max-w-6xl mx-auto px-6 -mt-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-blue-500 flex items-center gap-4">
+                <div class="bg-blue-100 p-4 rounded-full text-blue-600">
+                    <i data-lucide="badge-dollar-sign" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500 font-medium">งบประมาณที่ขออนุมัติ (เบื้องต้น)</p>
+                    <h2 class="text-3xl font-bold text-slate-800">100,000 <span class="text-lg text-slate-500 font-normal">บาท</span></h2>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-emerald-500 flex items-center gap-4">
+                <div class="bg-emerald-100 p-4 rounded-full text-emerald-600">
+                    <i data-lucide="users" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500 font-medium">เป้าหมายผู้เข้าร่วม</p>
+                    <h2 class="text-3xl font-bold text-slate-800">350 <span class="text-lg text-slate-500 font-normal">คน</span></h2>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 border-b-4 border-orange-500 flex items-center gap-4">
+                <div class="bg-orange-100 p-4 rounded-full text-orange-600">
+                    <i data-lucide="calendar-clock" class="w-8 h-8"></i>
+                </div>
+                <div>
+                    <p class="text-sm text-slate-500 font-medium">ระยะเวลาดำเนินงาน</p>
+                    <h2 class="text-3xl font-bold text-slate-800">33 <span class="text-lg text-slate-500 font-normal">วัน</span></h2>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3 Core Courses (R-U-N) -->
+    <section class="max-w-6xl mx-auto px-6 py-16">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-slate-800 mb-4">3 หลักสูตรระยะสั้น (Short Course) ขับเคลื่อนอนาคต</h2>
+            <p class="text-slate-600 text-lg">ออกแบบเนื้อหาให้สอดคล้องกับความต้องการของตลาดแรงงานยุคดิจิทัล</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Reskill -->
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow p-8 border border-slate-100 relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-2 bg-blue-500"></div>
+                <div class="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition-transform">
+                    <i data-lucide="refresh-ccw" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">R : RESKILL</h3>
+                <h4 class="text-blue-600 font-semibold mb-4">Digital Business Transformer</h4>
+                <p class="text-slate-600 mb-6">
+                    ปรับทักษะเดิมให้ทันโลก เข้าใจการวิเคราะห์ความต้องการทางธุรกิจ (Business Requirement) และจัดการข้อมูลด้วยเทคโนโลยี <strong>IoT Tracking & Smart Data</strong>
+                </p>
+            </div>
+
+            <!-- Upskill -->
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow p-8 border border-slate-100 relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
+                <div class="bg-emerald-50 w-16 h-16 rounded-2xl flex items-center justify-center text-emerald-600 mb-6 group-hover:scale-110 transition-transform">
+                    <i data-lucide="trending-up" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">U : UPSKILL</h3>
+                <h4 class="text-emerald-600 font-semibold mb-4">Next-Gen Web & App Creator</h4>
+                <p class="text-slate-600 mb-6">
+                    ยกระดับทักษะการเขียนโปรแกรม พัฒนา Web Application ด้วย <strong>สถาปัตยกรรมสมัยใหม่ (Modern Architecture)</strong> เพื่อการทำงานระดับมืออาชีพ
+                </p>
+            </div>
+
+            <!-- Newskill -->
+            <div class="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow p-8 border border-slate-100 relative overflow-hidden group">
+                <div class="absolute top-0 left-0 w-full h-2 bg-purple-500"></div>
+                <div class="bg-purple-50 w-16 h-16 rounded-2xl flex items-center justify-center text-purple-600 mb-6 group-hover:scale-110 transition-transform">
+                    <i data-lucide="sparkles" class="w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 mb-2">N : NEWSKILL</h3>
+                <h4 class="text-purple-600 font-semibold mb-4">AI-Ready Vocational Gen</h4>
+                <p class="text-slate-600 mb-6">
+                    สร้างทักษะใหม่แห่งอนาคต การใช้เครื่องมือ <strong>ปัญญาประดิษฐ์ (AI)</strong> เพื่อสร้างสรรค์สื่อผสม (Multimodal Content) และดิจิทัลมัลติมีเดีย
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Expected Outcomes (ROI for the college) -->
+    <section class="bg-slate-100 py-16">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                <div class="w-full md:w-1/2">
+                    <h2 class="text-3xl font-bold text-slate-800 mb-6">ความคุ้มค่าและผลที่คาดว่าจะได้รับ (Impact)</h2>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4">
+                            <div class="text-blue-600 mt-1"><i data-lucide="graduation-cap" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-800">สำหรับผู้เรียน & ประชาชน</h4>
+                                <p class="text-slate-600">มีทักษะดิจิทัลที่ทันสมัย พร้อมทำงานจริง ลดความเหลื่อมล้ำทางเทคโนโลยี (ผ่านเกณฑ์ประเมิน > 80%)</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="text-emerald-600 mt-1"><i data-lucide="building-2" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-800">สำหรับภาคธุรกิจและอุตสาหกรรม</h4>
+                                <p class="text-slate-600">ได้บุคลากรที่มีสมรรถนะตรงสาย ด้าน Data, Web Architecture และ AI รองรับ S-Curve</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="text-purple-600 mt-1"><i data-lucide="target" class="w-6 h-6"></i></div>
+                            <div>
+                                <h4 class="font-bold text-lg text-slate-800">สำหรับวิทยาลัยอาชีวศึกษาสุรินทร์</h4>
+                                <p class="text-slate-600">ยกระดับเป็น "ศูนย์กลางให้บริการวิชาการด้านเทคโนโลยีดิจิทัล" แก่ชุมชนและสังคมอย่างยั่งยืน</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="w-full md:w-1/2 bg-white p-8 rounded-2xl shadow-lg border border-slate-200">
+                    <h3 class="text-xl font-bold text-slate-800 mb-4 border-b pb-4">สรุปความสอดคล้องเชิงยุทธศาสตร์</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start gap-3">
+                            <i data-lucide="check-circle-2" class="text-green-500 shrink-0 mt-0.5 w-5 h-5"></i>
+                            <span class="text-slate-700"><strong>ยุทธศาสตร์ที่ 1:</strong> พัฒนากำลังคนตรงความต้องการยุคดิจิทัล</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i data-lucide="check-circle-2" class="text-green-500 shrink-0 mt-0.5 w-5 h-5"></i>
+                            <span class="text-slate-700"><strong>ยุทธศาสตร์ที่ 2:</strong> สร้างความเสมอภาค เข้าถึงเทคโนโลยีสมัยใหม่ ลดความเหลื่อมล้ำ</span>
+                        </li>
+                        <li class="flex items-start gap-3">
+                            <i data-lucide="check-circle-2" class="text-green-500 shrink-0 mt-0.5 w-5 h-5"></i>
+                            <span class="text-slate-700"><strong>ยุทธศาสตร์ที่ 4:</strong> จัดอบรมระยะสั้นอย่างมีประสิทธิภาพ คุ้มค่างบประมาณ</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer / Call to Action -->
+    <footer class="bg-slate-900 text-slate-400 py-12 text-center">
+        <div class="max-w-4xl mx-auto px-6">
+            <h2 class="text-white text-2xl font-bold mb-6">"เตรียมกำลังคนวันนี้ เพื่อขับเคลื่อนเศรษฐกิจดิจิทัลในวันหน้า"</h2>
+            <p class="mb-8">เสนอโดย: งานวัดผลประเมินผล ฝ่ายวิชาการ วิทยาลัยอาชีวศึกษาสุรินทร์</p>
+            <button class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition-colors flex items-center gap-2 mx-auto">
+                
+                <a href="https://padipanjayvo.github.io/srvc/AI-ReadyVocationalGen.html"
+   target="_blank"
+   rel="noopener noreferrer"
+   class="inline-flex bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full transition-colors items-center gap-2 mx-auto">
+    <i data-lucide="check-circle-2" class="w-5 h-5"></i>
+    คลิกดูโครงการ AI-Ready Vocational Gen (New Skill)
+</a>
+            </button>
+        </div>
+    </footer>
+
+    <!-- Initialize Lucide Icons -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

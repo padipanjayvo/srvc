@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NotebookLM สำหรับองค์กรปกครองส่วนท้องถิ่น (Canvas Edition)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&family=Sarabun:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #0f172a; /* Dark theme base */
+            font-family: 'Prompt', sans-serif;
+        }
+        #presentationCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        /* Hidden textarea for copy functionality */
+        #clipboard-helper {
+            position: absolute;
+            left: -9999px;
+        }
+        /* Overlay UI for toast */
+        #toast {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Prompt', sans-serif;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="presentationCanvas"></canvas>
+    <textarea id="clipboard-helper"></textarea>
+    <div id="toast">คัดลอก Prompt แล้ว!</div>
+
+    <script>
+        const canvas = document.getElementById('presentationCanvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let dpr = window.devicePixelRatio || 1;
+
+        // Presentation State
+        let currentSlideIndex = 0;
+        let targetSlideOffset = 0;
+        let currentSlideOffset = 0;
+        let isTransitioning = false;
+        
+        // Colors
+        const colors = {
+            bg: '#0f172a', // Slate 900
+            primary: '#1e3a8a', // Blue 900
+            accent: '#3b82f6', // Blue 500
+            secondary: '#f59e0b', // Amber 500
+            textLight: '#f8fafc',
+            textMuted: '#94a3b8',
+            cardBg: 'rgba(30, 41, 59, 0.7)',
+            promptBg: 'rgba(15, 23, 42, 0.8)'
+        };
+
+        // UI Zones (for click detection)
+        let uiZones = [];
+
+        function resize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width * dpr;
+            canvas.height = height * dpr;
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        const particles = [];
+        const numParticles = 60;
+        for (let i = 0; i < numParticles; i++) {
+            particles.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+                radius: Math.random() * 2 + 1
+            });
+        }
+
+        function drawBackground() {
+            // Gradient background
+            let grad = ctx.createLinearGradient(0, 0, width, height);
+            grad.addColorStop(0, '#0f172a');
+            grad.addColorStop(1, '#1e293b');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Draw Knowledge Graph Particles
+            ctx.fillStyle = 'rgba(59, 130, 246, 0.5)';
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
+            ctx.lineWidth = 1;
+
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0 || p.x > width) p.vx *= -1;
+                if (p.y < 0 || p.y > height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Connect particles
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    let dx = particles[i].x - particles[j].x;
+                    let dy = particles[i].y - particles[j].y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.globalAlpha = 1 - (dist/150);
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            }
+        }
+
+        function wrapText(context, text, x, y, maxWidth, lineHeight, font) {
+            context.font = font;
+            const words = text.split(' ');
+            let line = '';
+            let currentY = y;
+
+            for(let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + ' ';
+                let metrics = context.measureText(testLine);
+                let testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    context.fillText(line, x, currentY);
+                    line = words[n] + ' ';
+                    currentY += lineHeight;
+                }
+                else {
+                    line = testLine;
+                }
+            }
+            context.fillText(line, x, currentY);
+            return currentY + lineHeight;
+        }
+
+        function drawRoundRect(x, y, w, h, radius, fill, stroke) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+            ctx.lineTo(x + w, y + h - radius);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+            ctx.lineTo(x + radius, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            if (fill) {
+                ctx.fillStyle = fill;
+                ctx.fill();
+            }
+            if (stroke) {
+                ctx.strokeStyle = stroke;
+                ctx.stroke();
+            }
+        }
+
+        function addUIZone(id, x, y, w, h, action, cursor='pointer') {
+            uiZones.push({id, x, y, w, h, action, cursor});
+        }
+
+        const slides = [
+            // Slide 0: Title
+            function(offsetX) {
+                const cx = width / 2 + offsetX;
+                const cy = height / 2;
+                
+                // Main Card
+                drawRoundRect(cx - 400, cy - 200, 800, 400, 20, colors.cardBg, colors.accent);
+                
+                ctx.textAlign = 'center';
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 48px Prompt';
+                ctx.fillText('เปลี่ยนกองเอกสารหลวง', cx, cy - 80);
+                
+                let gradText = ctx.createLinearGradient(cx - 200, 0, cx + 200, 0);
+                gradText.addColorStop(0, colors.accent);
+                gradText.addColorStop(1, colors.secondary);
+                ctx.fillStyle = gradText;
+                ctx.fillText('ให้เป็นผู้ช่วยอัจฉริยะส่วนตัว', cx, cy - 20);
+
+                ctx.fillStyle = colors.textMuted;
+                ctx.font = '300 20px Prompt';
+                ctx.fillText('ยกระดับการทำงานของ อปท. เทศบาล และ อบต. ด้วย NotebookLM', cx, cy + 40);
+                ctx.fillText('AI ที่อ้างอิงข้อมูลจริง 100%', cx, cy + 70);
+
+                // Feature pills
+                const features = ['🔗 สังเคราะห์ข้อมูล', '📝 ร่างหนังสือราชการ', '📊 สร้าง Briefing Docs', '🎧 Audio Overview'];
+                ctx.font = '16px Prompt';
+                features.forEach((f, i) => {
+                    let px = cx - 300 + (i * 200);
+                    drawRoundRect(px - 80, cy + 120, 160, 40, 20, 'rgba(59, 130, 246, 0.2)');
+                    ctx.fillStyle = colors.textLight;
+                    ctx.fillText(f, px, cy + 146);
+                });
+            },
+            // Slide 1: Synthesis
+            function(offsetX) {
+                const startX = 100 + offsetX;
+                const startY = 100;
+                
+                ctx.textAlign = 'left';
+                ctx.fillStyle = colors.accent;
+                ctx.font = 'bold 24px Prompt';
+                ctx.fillText('Feature 01', startX, startY);
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 36px Prompt';
+                ctx.fillText('การสังเคราะห์ข้อมูลใหม่จากคลังเอกสาร', startX, startY + 45);
+                ctx.fillStyle = colors.textMuted;
+                ctx.font = '20px Prompt';
+                ctx.fillText('ลดเวลาเปรียบเทียบเอกสาร ให้ AI วิเคราะห์ความเชื่อมโยงให้ในพริบตา', startX, startY + 80);
+
+                // Left Box: Docs
+                drawRoundRect(startX, startY + 120, width/2 - 150, 300, 15, colors.cardBg);
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 20px Prompt';
+                ctx.fillText('📁 เอกสารตั้งต้น (อัปโหลดเข้า Notebook)', startX + 30, startY + 160);
+                
+                ctx.font = '18px Prompt';
+                ctx.fillStyle = '#ef4444'; ctx.fillText('📄 แผนพัฒนาท้องถิ่น (66-70).pdf', startX + 50, startY + 210);
+                ctx.fillStyle = '#3b82f6'; ctx.fillText('📝 รายงานการประชุมสภา_3ครั้งล่าสุด.docx', startX + 50, startY + 260);
+                ctx.fillStyle = '#10b981'; ctx.fillText('💬 สถิติข้อร้องเรียนประชาชน_ผ่านLineOA.txt', startX + 50, startY + 310);
+
+                // Right Box: Prompt & Result
+                const rightX = width/2 + 50 + offsetX;
+                drawRoundRect(rightX, startY + 120, width/2 - 150, 300, 15, colors.promptBg, colors.accent);
+                
+                ctx.fillStyle = colors.secondary;
+                ctx.font = 'bold 18px Prompt';
+                ctx.fillText('🔥 Advanced Prompt', rightX + 30, startY + 160);
+                
+                // Copy Button Simulation
+                drawRoundRect(rightX + width/2 - 250, startY + 140, 70, 30, 5, '#334155');
+                ctx.fillStyle = 'white';
+                ctx.font = '14px Prompt';
+                ctx.fillText('📋 Copy', rightX + width/2 - 240, startY + 160);
+                addUIZone('copy1', rightX + width/2 - 250, startY + 140, 70, 30, () => copyPrompt("จากเอกสารทั้งหมด ให้วิเคราะห์ว่ามีข้อร้องเรียนใดของประชาชนที่ยังไม่ได้ถูกบรรจุในแผนดำเนินงาน หรือยังไม่ได้ถูกหยิบยกมาพูดคุยในสภาเลย พร้อมจัดกลุ่มปัญหาเป็น 3 ลำดับความเร่งด่วน"));
+
+                ctx.fillStyle = colors.textLight;
+                wrapText(ctx, '"จากเอกสารทั้งหมด ให้วิเคราะห์ว่ามีข้อร้องเรียนใดของประชาชนที่ยังไม่ได้ถูกบรรจุในแผนดำเนินงาน หรือยังไม่ได้ถูกหยิบยกมาพูดคุยในสภาเลย พร้อมจัดกลุ่มปัญหาเป็น 3 ลำดับความเร่งด่วน"', rightX + 30, startY + 200, width/2 - 210, 28, 'italic 18px Sarabun');
+
+                ctx.fillStyle = colors.accent;
+                ctx.font = 'bold 18px Prompt';
+                ctx.fillText('✨ ผลลัพธ์ที่ได้ (Wow Factor)', rightX + 30, startY + 320);
+                ctx.fillStyle = colors.textMuted;
+                wrapText(ctx, 'AI ชี้เป้าปัญหาที่ตกหล่น (Blind spots) พร้อมสร้าง Citation [1] ให้อ้างอิงกลับไปหน้าต้นฉบับได้ทันที ลดเวลาทำงานจาก 3 วัน เหลือ 3 นาที', rightX + 30, startY + 350, width/2 - 210, 24, '16px Prompt');
+            },
+            // Slide 2: Memo
+            function(offsetX) {
+                const startX = 100 + offsetX;
+                const startY = 100;
+                
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#10b981'; // Green
+                ctx.font = 'bold 24px Prompt';
+                ctx.fillText('Feature 02', startX, startY);
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 36px Prompt';
+                ctx.fillText('ร่างบันทึกข้อความราชการ', startX, startY + 45);
+
+                const leftW = 400;
+                drawRoundRect(startX, startY + 100, leftW, 200, 15, colors.promptBg, '#10b981');
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 18px Prompt';
+                ctx.fillText('💬 Prompt สำหรับสร้างฟอร์ม', startX + 20, startY + 130);
+                ctx.fillStyle = colors.textLight;
+                wrapText(ctx, '"จงร่างบันทึกข้อความราชการ เพื่อรายงานความคืบหน้าโครงการก่อสร้างถนน โดยใช้ภาษาราชการ กำหนดโครงสร้าง: 1. เรื่อง 2. เรียน 3. ต้นเรื่อง 4. ข้อเท็จจริง 5. ข้อพิจารณา"', startX + 20, startY + 170, leftW - 40, 25, '16px Sarabun');
+                
+                // Copy Button 2
+                drawRoundRect(startX + leftW - 90, startY + 110, 70, 30, 5, '#334155');
+                ctx.fillStyle = 'white';ctx.font = '14px Prompt';ctx.fillText('📋 Copy', startX + leftW - 80, startY + 130);
+                addUIZone('copy2', startX + leftW - 90, startY + 110, 70, 30, () => copyPrompt("จงร่างบันทึกข้อความราชการ เพื่อรายงานความคืบหน้าโครงการก่อสร้างถนน โดยใช้ภาษาราชการ กำหนดโครงสร้าง: 1. เรื่อง 2. เรียน 3. ต้นเรื่อง 4. ข้อเท็จจริง 5. ข้อพิจารณา"));
+
+                // Right Box: Document Mockup
+                const rightX = startX + leftW + 50;
+                const docW = width - rightX - 100;
+                drawRoundRect(rightX, startY + 80, docW, 400, 5, '#ffffff'); // White paper
+                
+                ctx.fillStyle = '#000'; // Black text on white paper
+                ctx.textAlign = 'center';
+                ctx.font = 'bold 24px Sarabun';
+                ctx.fillText('บันทึกข้อความ', rightX + docW/2, startY + 130);
+                
+                ctx.textAlign = 'left';
+                ctx.font = 'bold 18px Sarabun';
+                ctx.fillText('ส่วนราชการ', rightX + 40, startY + 180);
+                ctx.font = '18px Sarabun';
+                ctx.fillText('กองช่าง เทศบาลตำบล...', rightX + 130, startY + 180);
+                
+                ctx.font = 'bold 18px Sarabun';
+                ctx.fillText('เรื่อง', rightX + 40, startY + 220);
+                ctx.font = '18px Sarabun';
+                ctx.fillText('รายงานความคืบหน้าโครงการก่อสร้างถนนสายหลัก...', rightX + 90, startY + 220);
+
+                ctx.beginPath();
+                ctx.moveTo(rightX + 40, startY + 240);
+                ctx.lineTo(rightX + docW - 40, startY + 240);
+                ctx.strokeStyle = '#ccc';
+                ctx.stroke();
+
+                ctx.font = 'bold 18px Sarabun';
+                ctx.fillText('๑. ต้นเรื่อง', rightX + 40, startY + 270);
+                ctx.font = '18px Sarabun';
+                wrapText(ctx, 'ตามที่เทศบาลตำบล... ได้ทำสัญญาจ้างอ้างอิงตาม TOR โครงการก่อสร้างถนน [1]...', rightX + 80, startY + 300, docW - 120, 24, '18px Sarabun');
+
+                ctx.font = 'bold 18px Sarabun';
+                ctx.fillText('๒. ข้อเท็จจริง', rightX + 40, startY + 350);
+                wrapText(ctx, 'พบว่าผู้รับจ้างได้ดำเนินการวางท่อระบายน้ำเสร็จสิ้นแล้ว คิดเป็นร้อยละ ๔๐ [2]...', rightX + 80, startY + 380, docW - 120, 24, '18px Sarabun');
+            },
+            // Slide 3: Briefing Docs
+            function(offsetX) {
+                const startX = 100 + offsetX;
+                const startY = 100;
+                
+                ctx.textAlign = 'left';
+                ctx.fillStyle = '#a855f7'; // Purple
+                ctx.font = 'bold 24px Prompt';
+                ctx.fillText('Feature 03', startX, startY);
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 36px Prompt';
+                ctx.fillText('สร้าง Briefing Docs สำหรับผู้บริหาร', startX, startY + 45);
+                ctx.fillStyle = colors.textMuted;
+                ctx.font = '20px Prompt';
+                ctx.fillText('ย่อยกฎหมาย 100 หน้า ให้เหลือ 1 หน้า A4 เพื่อเตรียมนายกฯ/ปลัดฯ ก่อนเข้าประชุม', startX, startY + 80);
+
+                // 3 Steps
+                const stepW = (width - 250) / 3;
+                const gap = 25;
+
+                // Step 1
+                drawRoundRect(startX, startY + 130, stepW, 250, 15, colors.cardBg, '#a855f7');
+                ctx.fillStyle = colors.textLight; ctx.textAlign = 'center'; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('1. อัปโหลดระเบียบใหม่', startX + stepW/2, startY + 170);
+                ctx.font = '60px Arial'; ctx.fillText('📚', startX + stepW/2, startY + 240);
+                ctx.font = '16px Prompt'; ctx.fillStyle = colors.textMuted;
+                wrapText(ctx, 'ร่าง พ.ร.บ. หรืองบประมาณฉบับใหม่ ความยาว 100+ หน้า', startX + 20, startY + 300, stepW - 40, 22, '16px Prompt');
+
+                // Step 2
+                let s2x = startX + stepW + gap;
+                drawRoundRect(s2x, startY + 130, stepW, 250, 15, colors.cardBg, colors.accent);
+                ctx.fillStyle = colors.textLight; ctx.textAlign = 'center'; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('2. ใช้ Notebook Guide', s2x + stepW/2, startY + 170);
+                ctx.font = '60px Arial'; ctx.fillText('⚡', s2x + stepW/2, startY + 240);
+                ctx.font = '16px Prompt'; ctx.fillStyle = colors.textMuted;
+                wrapText(ctx, 'คลิกปุ่ม Briefing Doc หรือ FAQ ในคลิกเดียว', s2x + 20, startY + 300, stepW - 40, 22, '16px Prompt');
+
+                // Step 3
+                let s3x = s2x + stepW + gap;
+                drawRoundRect(s3x, startY + 130, stepW, 250, 15, 'rgba(168, 85, 247, 0.2)', '#a855f7');
+                ctx.fillStyle = colors.textLight; ctx.textAlign = 'center'; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('3. ปรับแต่งด้วย Prompt', s3x + stepW/2, startY + 170);
+                
+                // Copy Button 3
+                drawRoundRect(s3x + stepW/2 - 35, startY + 190, 70, 25, 5, '#334155');
+                ctx.fillStyle = 'white'; ctx.font = '12px Prompt'; ctx.fillText('📋 Copy', s3x + stepW/2, startY + 207);
+                addUIZone('copy3', s3x + stepW/2 - 35, startY + 190, 70, 25, () => copyPrompt("จงสรุปเอกสารนี้ให้จบใน 1 หน้า A4 เป็นรูปแบบ Bullet Point เพื่อให้นายกเทศมนตรีใช้อ่านเตรียมตัวตอบคำถาม โดยเน้นเฉพาะผลกระทบที่จะเกิดขึ้นกับ 'งบประมาณ'"));
+
+                ctx.textAlign = 'left';
+                ctx.fillStyle = colors.secondary;
+                wrapText(ctx, '"จงสรุปเอกสารนี้ให้จบใน 1 หน้า A4 เป็นรูปแบบ Bullet Point เพื่อให้นายกเทศมนตรีใช้อ่านเตรียมตัวตอบคำถาม โดยเน้นเฉพาะผลกระทบที่จะเกิดขึ้นกับ งบประมาณ"', s3x + 20, startY + 240, stepW - 40, 22, 'italic 16px Sarabun');
+            },
+            // Slide 4: Audio Overview
+            function(offsetX) {
+                const startX = 100 + offsetX;
+                const startY = 100;
+                
+                ctx.textAlign = 'left';
+                ctx.fillStyle = colors.secondary; 
+                ctx.font = 'bold 24px Prompt';
+                ctx.fillText('Feature 04', startX, startY);
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 36px Prompt';
+                ctx.fillText('Audio Overview (Deep Dive Podcast)', startX, startY + 45);
+                ctx.fillStyle = colors.textMuted;
+                ctx.font = '20px Prompt';
+                ctx.fillText('แปลงรายงานผลการดำเนินงาน เป็นพอดแคสต์ให้ผู้บริหารฟังระหว่างนั่งรถลงพื้นที่', startX, startY + 80);
+
+                // Player UI
+                const pX = startX + 50;
+                const pY = startY + 130;
+                drawRoundRect(pX, pY, 350, 400, 20, 'rgba(0,0,0,0.5)', colors.secondary);
+                
+                // Artwork
+                drawRoundRect(pX + 75, pY + 40, 200, 200, 15, colors.primary);
+                ctx.fillStyle = 'white'; ctx.textAlign = 'center'; ctx.font = '80px Arial';
+                ctx.fillText('🎧', pX + 175, pY + 170);
+
+                ctx.fillStyle = 'white'; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('สรุปสถานการณ์น้ำท่วม ปี 2569', pX + 175, pY + 280);
+                ctx.fillStyle = colors.textMuted; ctx.font = '14px Prompt';
+                ctx.fillText('NotebookLM AI Hosts', pX + 175, pY + 305);
+
+                // Progress
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(pX + 30, pY + 330, 290, 4);
+                ctx.fillStyle = colors.secondary;
+                ctx.fillRect(pX + 30, pY + 330, 100, 4);
+                ctx.beginPath(); ctx.arc(pX + 130, pY + 332, 6, 0, Math.PI*2); ctx.fill();
+
+                // Play btn
+                ctx.beginPath(); ctx.arc(pX + 175, pY + 375, 20, 0, Math.PI*2); ctx.fillStyle = 'white'; ctx.fill();
+                ctx.beginPath(); ctx.moveTo(pX + 168, pY + 365); ctx.lineTo(pX + 185, pY + 375); ctx.lineTo(pX + 168, pY + 385); ctx.fillStyle = 'black'; ctx.fill();
+
+                // Text info
+                const txtX = pX + 400;
+                ctx.textAlign = 'left';
+                drawRoundRect(txtX, pY, width - txtX - 100, 100, 10, 'rgba(239, 68, 68, 0.1)', '#ef4444');
+                ctx.fillStyle = '#ef4444'; ctx.font = 'bold 18px Prompt'; ctx.fillText('⚠️ ข้อควรรู้', txtX + 20, pY + 30);
+                ctx.fillStyle = colors.textLight; ctx.font = '16px Prompt'; ctx.fillText('ปัจจุบันเสียง AI Host ยังรองรับเฉพาะภาษาอังกฤษ', txtX + 20, pY + 60);
+
+                drawRoundRect(txtX, pY + 120, width - txtX - 100, 120, 10, 'rgba(16, 185, 129, 0.1)', '#10b981');
+                ctx.fillStyle = '#10b981'; ctx.font = 'bold 18px Prompt'; ctx.fillText('🌟 ความว๊าว (The Wow)', txtX + 20, pY + 150);
+                ctx.fillStyle = colors.textLight; 
+                wrapText(ctx, 'ระบบสามารถอ่านเอกสาร "ภาษาไทย" ของเรา แล้วนำไปถกเถียงและวิเคราะห์เชิงลึกออกมาเป็นภาษาอังกฤษได้อย่างแม่นยำ! เหมาะสำหรับฟังระหว่าง On-the-go หรือฝึกภาษา', txtX + 20, pY + 180, width - txtX - 140, 24, '16px Prompt');
+            },
+            // Slide 5: Wrap up
+            function(offsetX) {
+                const cx = width / 2 + offsetX;
+                const cy = height / 2;
+                
+                ctx.textAlign = 'center';
+                ctx.fillStyle = colors.secondary;
+                ctx.font = '60px Arial';
+                ctx.fillText('🚀', cx, cy - 150);
+                
+                ctx.fillStyle = colors.textLight;
+                ctx.font = 'bold 42px Prompt';
+                ctx.fillText('พร้อมเปลี่ยนการทำงานของท้องถิ่นแล้วหรือยัง?', cx, cy - 70);
+
+                // Two columns
+                const colW = 350;
+                
+                // Limits
+                drawRoundRect(cx - colW - 20, cy, colW, 180, 15, colors.cardBg);
+                ctx.fillStyle = colors.secondary; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('📌 ข้อจำกัดที่ต้องรู้', cx - colW/2 - 20, cy + 40);
+                ctx.fillStyle = colors.textLight; ctx.font = '16px Prompt';
+                ctx.fillText('• 50 ไฟล์ต่อ 1 Notebook', cx - colW/2 - 20, cy + 80);
+                ctx.fillText('• 500,000 คำต่อ 1 ไฟล์', cx - colW/2 - 20, cy + 110);
+                ctx.fillText('• ข้อมูลปลอดภัยในบัญชี Google', cx - colW/2 - 20, cy + 140);
+
+                // Best Practice
+                drawRoundRect(cx + 20, cy, colW, 180, 15, colors.cardBg);
+                ctx.fillStyle = '#10b981'; ctx.font = 'bold 20px Prompt';
+                ctx.fillText('💡 Best Practices', cx + colW/2 + 20, cy + 40);
+                ctx.fillStyle = colors.textLight; ctx.font = '16px Prompt';
+                ctx.fillText('• ตั้งชื่อไฟล์ให้ชัดเจน (เช่น แผนพัฒนา66.pdf)', cx + colW/2 + 20, cy + 80);
+                ctx.fillText('• แยก Notebook ตามโปรเจกต์หรืองาน', cx + colW/2 + 20, cy + 110);
+                ctx.fillText('• เขียน Prompt ชัดเจนเหมือนสั่งงานคน', cx + colW/2 + 20, cy + 140);
+            }
+        ];
+
+        function drawNavigation() {
+            const margin = 30;
+            const btnW = 120;
+            const btnH = 40;
+            const cy = height - margin - btnH;
+
+            // Prev Button
+            if (currentSlideIndex > 0) {
+                drawRoundRect(margin, cy, btnW, btnH, 20, 'rgba(255,255,255,0.1)', 'rgba(255,255,255,0.3)');
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.font = '16px Prompt';
+                ctx.fillText('◀ ก่อนหน้า', margin + btnW/2, cy + 25);
+                addUIZone('prev', margin, cy, btnW, btnH, () => changeSlide(-1));
+            }
+
+            // Next Button
+            if (currentSlideIndex < slides.length - 1) {
+                drawRoundRect(width - margin - btnW, cy, btnW, btnH, 20, colors.accent);
+                ctx.fillStyle = 'white';
+                ctx.textAlign = 'center';
+                ctx.font = '16px Prompt';
+                ctx.fillText('ถัดไป ▶', width - margin - btnW/2, cy + 25);
+                addUIZone('next', width - margin - btnW, cy, btnW, btnH, () => changeSlide(1));
+            }
+
+            // Dots
+            const totalDots = slides.length;
+            const dotW = 12;
+            const startX = width/2 - (totalDots * 20)/2;
+            for(let i=0; i<totalDots; i++) {
+                ctx.beginPath();
+                ctx.arc(startX + i * 20, cy + 20, i === currentSlideIndex ? 6 : 4, 0, Math.PI*2);
+                ctx.fillStyle = i === currentSlideIndex ? colors.accent : 'rgba(255,255,255,0.3)';
+                ctx.fill();
+                
+                // Add click zone for dot
+                addUIZone(`dot${i}`, startX + i*20 - 10, cy + 10, 20, 20, () => goToSlide(i));
+            }
+        }
+
+        function changeSlide(dir) {
+            let newIndex = currentSlideIndex + dir;
+            if (newIndex >= 0 && newIndex < slides.length && !isTransitioning) {
+                goToSlide(newIndex);
+            }
+        }
+
+        function goToSlide(index) {
+            if(index === currentSlideIndex || isTransitioning) return;
+            isTransitioning = true;
+            // Target offset represents screen widths
+            targetSlideOffset = (currentSlideIndex - index) * width;
+            
+            // Animation logic built into the requestAnimationFrame loop
+            let startOffset = currentSlideOffset;
+            let startTime = performance.now();
+            let duration = 600; // ms
+
+            function animate(time) {
+                let elapsed = time - startTime;
+                let progress = Math.min(elapsed / duration, 1);
+                // Ease out cubic
+                let easeProgress = 1 - Math.pow(1 - progress, 3);
+                
+                currentSlideOffset = startOffset + (targetSlideOffset - startOffset) * easeProgress;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentSlideIndex = index;
+                    currentSlideOffset = 0;
+                    targetSlideOffset = 0;
+                    isTransitioning = false;
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        // Copy functionality wrapper
+        function copyPrompt(text) {
+            const helper = document.getElementById('clipboard-helper');
+            helper.value = text;
+            helper.select();
+            try {
+                document.execCommand('copy');
+                showToast();
+            } catch (err) {
+                console.error('Copy failed', err);
+            }
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.style.opacity = '1';
+            setTimeout(() => {
+                toast.style.opacity = '0';
+            }, 2000);
+        }
+
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            for (let z of uiZones) {
+                if (mouseX >= z.x && mouseX <= z.x + z.w && mouseY >= z.y && mouseY <= z.y + z.h) {
+                    z.action();
+                    break; // Execute only topmost
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            let hover = false;
+            for (let z of uiZones) {
+                if (mouseX >= z.x && mouseX <= z.x + z.w && mouseY >= z.y && mouseY <= z.y + z.h) {
+                    hover = true;
+                    break;
+                }
+            }
+            canvas.style.cursor = hover ? 'pointer' : 'default';
+        });
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ') changeSlide(1);
+            if (e.key === 'ArrowLeft') changeSlide(-1);
+        });
+
+        function animateLoop() {
+            ctx.clearRect(0, 0, width, height);
+            
+            drawBackground();
+
+            // Clear old UI zones before drawing new frame
+            uiZones = [];
+
+            // Draw current slide and transitioning slide if applicable
+            if (isTransitioning) {
+                // Determine direction
+                let direction = targetSlideOffset < 0 ? 1 : -1; // 1 if moving right (next slide), -1 if moving left
+                let nextIndex = currentSlideIndex + direction;
+                
+                slides[currentSlideIndex](currentSlideOffset); // Move current slide out
+                slides[nextIndex](currentSlideOffset + (width * direction)); // Move next slide in
+            } else {
+                slides[currentSlideIndex](0);
+            }
+
+            drawNavigation();
+
+            requestAnimationFrame(animateLoop);
+        }
+
+        window.onload = function() {
+            animateLoop();
+        };
+
+    </script>
+</body>
+</html>

@@ -55,6 +55,11 @@
         let width, height;
         let dpr = window.devicePixelRatio || 1;
 
+        // Preload User Image for Profile Slide
+        const userProfileImage = new Image();
+        userProfileImage.crossOrigin = "anonymous";
+        userProfileImage.src = 'https://img1.pic.in.th/images/imgjay002.png';
+
         // Presentation State
         let currentSlideIndex = 0;
         let targetSlideOffset = 0;
@@ -443,7 +448,62 @@
                 ctx.fillStyle = colors.textLight; 
                 wrapText(ctx, 'ระบบสามารถอ่านเอกสาร "ภาษาไทย" ของเรา แล้วนำไปถกเถียงและวิเคราะห์เชิงลึกออกมาเป็นภาษาอังกฤษได้อย่างแม่นยำ! เหมาะสำหรับฟังระหว่าง On-the-go หรือฝึกภาษา', txtX + 20, pY + 180, width - txtX - 140, 24, '16px Prompt');
             },
-            // Slide 5: Wrap up
+            // Slide 5: Instructor Profile (New Slide)
+            function(offsetX) {
+                const cx = width / 2 + offsetX;
+                const cy = height / 2;
+                const imgSize = 220; // Diameter of the image
+
+                ctx.textAlign = 'center';
+
+                // 1. Draw the Image (Circular with glow)
+                if (userProfileImage.complete) {
+                     ctx.save();
+                     ctx.beginPath();
+                     // Outer glow/border
+                     ctx.shadowColor = colors.secondary;
+                     ctx.shadowBlur = 25;
+                     ctx.lineWidth = 6;
+                     ctx.strokeStyle = colors.secondary;
+                     ctx.arc(cx, cy - 80, imgSize / 2 + 6, 0, Math.PI * 2);
+                     ctx.stroke();
+                     ctx.shadowBlur = 0; // Reset shadow for clipping
+
+                     // Clip for the image itself
+                     ctx.beginPath();
+                     ctx.arc(cx, cy - 80, imgSize / 2, 0, Math.PI * 2);
+                     ctx.closePath();
+                     ctx.clip();
+
+                     // Draw image centered in the clipped area
+                     ctx.drawImage(userProfileImage, cx - imgSize / 2, cy - 80 - imgSize / 2, imgSize, imgSize);
+                     ctx.restore();
+                } else {
+                    // Fallback if image isn't ready yet
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - 80, imgSize / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = colors.cardBg;
+                    ctx.fill();
+                    ctx.fillStyle = colors.textMuted;
+                    ctx.font = '16px Prompt';
+                    ctx.fillText('Loading Image...', cx, cy - 80);
+                }
+
+                // 2. Draw Title
+                ctx.fillStyle = colors.secondary; // Use accent color
+                ctx.font = 'bold 48px Prompt';
+                 // Add a slight glow to the text
+                ctx.shadowColor = 'rgba(245, 158, 11, 0.5)';
+                ctx.shadowBlur = 15;
+                ctx.fillText('เรียนรู้กับครูเจอาร์', cx, cy + 100);
+                ctx.shadowBlur = 0; // Reset
+
+                // 3. Draw Subtitle
+                ctx.fillStyle = colors.textLight;
+                ctx.font = '300 28px Prompt';
+                ctx.fillText('วิทยากร / ผู้เชี่ยวชาญ NotebookLM', cx, cy + 150);
+            },
+            // Slide 6: Wrap up
             function(offsetX) {
                 const cx = width / 2 + offsetX;
                 const cy = height / 2;

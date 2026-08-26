@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="th" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คลังความรู้ฉบับสมบูรณ์: ระบบปฏิบัติการ ฮาร์ดแวร์ เครือข่าย และการแก้ไขปัญหาคอมพิวเตอร์</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0369a1',
+                            700: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .nav-item.active {
+            background-color: #0284c7;
+            color: #ffffff;
+            font-weight: 600;
+            box-shadow: 0 4px 6px -1px rgba(2, 132, 199, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+    <!-- Top Navigation Header -->
+    <header class="sticky top-0 z-50 bg-slate-900 text-white shadow-lg border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center space-x-3 cursor-pointer" onclick="switchSection('mod-all')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white shadow-md">
+                        <i class="fa-solid fa-book-bookmark text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base sm:text-lg leading-tight tracking-wide text-white">CompTech Knowledge Hub</h1>
+                        <p class="text-xs text-brand-300">คู่มือเรียนรู้ระบบคอมพิวเตอร์และเทคโนโลยีไอทีเชิงลึก</p>
+                    </div>
+                </div>
+
+                <!-- Global Search Box -->
+                <div class="hidden md:flex items-center relative w-72">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 text-slate-400 text-xs"></i>
+                    <input type="text" id="global-search" oninput="handleGlobalSearch()" placeholder="ค้นเรื่อง เช่น ipconfig, UEFI, ESD..." class="w-full pl-9 pr-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-xs text-white focus:outline-none focus:ring-2 focus:ring-brand-500 placeholder-slate-400">
+                </div>
+
+                <!-- Mobile menu toggle button -->
+                <button onclick="toggleMobileNav()" class="md:hidden p-2 text-slate-300 hover:text-white">
+                    <i class="fa-solid fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div id="mobile-nav" class="hidden md:hidden border-t border-slate-800 bg-slate-900 px-4 py-3 space-y-1">
+            <button onclick="switchSection('mod-os'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-desktop text-brand-400"></i> 1. ระบบปฏิบัติการ & Kernel
+            </button>
+            <button onclick="switchSection('mod-storage'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-hard-drive text-brand-400"></i> 2. ระบบไฟล์ & Storage
+            </button>
+            <button onclick="switchSection('mod-cli'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-terminal text-brand-400"></i> 3. คำสั่ง CLI & Windows Utilities
+            </button>
+            <button onclick="switchSection('mod-network'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-network-wired text-brand-400"></i> 4. เครือข่าย & IP Configuration
+            </button>
+            <button onclick="switchSection('mod-hardware'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-microchip text-brand-400"></i> 5. ฮาร์ดแวร์ & การบำรุงรักษา
+            </button>
+            <button onclick="switchSection('mod-troubleshoot'); toggleMobileNav()" class="w-full text-left px-3 py-2 text-xs font-medium text-slate-300 hover:bg-slate-800 rounded-lg flex items-center gap-2">
+                <i class="fa-solid fa-screwdriver-wrench text-brand-400"></i> 6. กระบวนการแก้ไขปัญหา
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container Layout -->
+    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow grid grid-cols-1 md:grid-cols-12 gap-6">
+
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="hidden md:block md:col-span-3 space-y-4">
+            <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm sticky top-20 space-y-2">
+                <div class="text-xs font-bold text-slate-400 uppercase tracking-wider px-3 pt-2">สารบัญหมวดหมู่</div>
+                <nav class="space-y-1">
+                    <button onclick="switchSection('mod-all')" id="btn-mod-all" class="nav-item active w-full text-left px-3.5 py-2.5 rounded-xl text-xs flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-layer-group w-4 text-center"></i> เนื้อหาทั้งหมด
+                    </button>
+                    <button onclick="switchSection('mod-os')" id="btn-mod-os" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-desktop w-4 text-center text-blue-600"></i> 1. ระบบปฏิบัติการ & Kernel
+                    </button>
+                    <button onclick="switchSection('mod-storage')" id="btn-mod-storage" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-hard-drive w-4 text-center text-purple-600"></i> 2. ระบบไฟล์ & Storage
+                    </button>
+                    <button onclick="switchSection('mod-cli')" id="btn-mod-cli" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-terminal w-4 text-center text-emerald-600"></i> 3. CLI & เครื่องมือ Windows
+                    </button>
+                    <button onclick="switchSection('mod-network')" id="btn-mod-network" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-network-wired w-4 text-center text-teal-600"></i> 4. เครือข่าย & IP Config
+                    </button>
+                    <button onclick="switchSection('mod-hardware')" id="btn-mod-hardware" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-microchip w-4 text-center text-amber-600"></i> 5. ฮาร์ดแวร์ & บำรุงรักษา
+                    </button>
+                    <button onclick="switchSection('mod-troubleshoot')" id="btn-mod-troubleshoot" class="nav-item w-full text-left px-3.5 py-2.5 rounded-xl text-xs text-slate-700 hover:bg-slate-100 flex items-center gap-2.5 transition">
+                        <i class="fa-solid fa-screwdriver-wrench w-4 text-center text-rose-600"></i> 6. กระบวนการแก้ปัญหา
+                    </button>
+                </nav>
+
+                <div class="pt-3 border-t border-slate-100 text-[11px] text-slate-400 px-3">
+                    <p><i class="fa-solid fa-circle-info mr-1"></i> เนื้อหาอ้างอิงตามมาตรฐานสถาปัตยกรรมคอมพิวเตอร์และการสนับสนุนเทคโนโลยีไอที (IT Support)</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="md:col-span-9 space-y-8">
+
+            <!-- Hero Banner -->
+            <div class="bg-gradient-to-r from-slate-900 via-brand-900 to-indigo-950 rounded-2xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden border border-slate-800">
+                <div class="relative z-10 space-y-3 max-w-2xl">
+                    <span class="px-3 py-1 text-xs font-semibold bg-brand-500/20 text-brand-300 border border-brand-500/30 rounded-full inline-flex items-center gap-1.5">
+                        <i class="fa-solid fa-book-open"></i> ศูนย์รวมทฤษฎี & คู่มือปฏิบัติงานไอที
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold leading-tight tracking-wide">
+                        คู่มือศึกษาการบริหารจัดการระบบและแก้ปัญหาคอมพิวเตอร์
+                    </h2>
+                    <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
+                        รวบรวมองค์ความรู้ทฤษฎีทางเทคนิค โครงสร้างฮาร์ดแวร์-ซอฟต์แวร์ ตารางเปรียบเทียบคำสั่ง และแนวทางการวิเคราะห์อาการเสียเชิงวิศวกรรมไอทีโดยไม่มีข้อสอบเจือปน
+                    </p>
+                </div>
+            </div>
+
+            <!-- Search result status message -->
+            <div id="search-status" class="hidden bg-amber-50 border border-amber-200 text-amber-800 p-3 rounded-xl text-xs flex justify-between items-center">
+                <span>กำลังกรองเนื้อหาตามคำค้น: <strong id="search-keyword"></strong></span>
+                <button onclick="clearSearch()" class="text-amber-600 hover:underline font-bold">ล้างการค้นหา</button>
+            </div>
+
+            <!-- MODULE 1: OS & KERNEL ARCHITECTURE -->
+            <section id="mod-os" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-bold">1</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">ระบบปฏิบัติการและสถาปัตยกรรม (Operating Systems & Kernel)</h3>
+                        <p class="text-xs text-slate-500">โครงสร้างแกนกลาง การสื่อสารกับฮาร์ดแวร์ และกระบวนการ บูตเครื่อง (Boot Sequence)</p>
+                    </div>
+                </div>
+
+                <!-- Content Cards Grid -->
+                <div class="grid grid-cols-1 gap-6">
+                    <!-- Card 1.1: Core Functions & Kernel -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-microchip text-blue-600"></i> 1.1 หน้าที่หลักของระบบปฏิบัติการ และ Kernel
+                        </h4>
+                        <p class="text-xs text-slate-600 leading-relaxed">
+                            <strong>ระบบปฏิบัติการ (Operating System - OS)</strong> ทำหน้าที่เป็นตัวกลางในการบริหารจัดการทรัพยากรฮาร์ดแวร์ (CPU, Memory, Disk, I/O Devices) และอำนวยความสะดวกให้ซอฟต์แวร์ประยุกต์ (Applications) ทำงานได้อย่างมีประสิทธิภาพ
+                        </p>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2 text-xs">
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                                <span class="font-bold text-blue-700 block"><i class="fa-solid fa-cube mr-1"></i> Kernel (แกนกลาง)</span>
+                                <p class="text-slate-600">ส่วนประกอบลึกสุดที่เข้าถึงฮาร์ดแวร์โดยตรง ทำหน้าที่จัดสรรเวลา CPU (Process Scheduling), จัดการพื้นที่ RAM และควบคุม Driver</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                                <span class="font-bold text-blue-700 block"><i class="fa-solid fa-terminal mr-1"></i> Shell (ส่วนปฏิสัมพันธ์)</span>
+                                <p class="text-slate-600">ตัวประสานงานรับคำสั่งจากผู้ใช้เพื่อส่งต่อให้ Kernel ประมวลผล เช่น CLI (Command Line) หรือ GUI (Graphical User Interface)</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                                <span class="font-bold text-blue-700 block"><i class="fa-solid fa-[#]"></i> Drivers (ส่วนควบคุม)</span>
+                                <p class="text-slate-600">ซอฟต์แวร์เฉพาะทางที่แปลคำสั่งจาก OS ให้เป็นภาษาคำสั่งเฉพาะของฮาร์ดแวร์แต่ละประเภท</p>
+                            </div>
+                        </div>
+
+                        <!-- Table: OS Types Comparison -->
+                        <div class="overflow-x-auto pt-2">
+                            <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-800 border-b border-slate-200">
+                                        <th class="p-2.5 font-bold">ประเภท OS</th>
+                                        <th class="p-2.5 font-bold">ลักษณะลิขสิทธิ์</th>
+                                        <th class="p-2.5 font-bold">จุดเด่น & กลุ่มใช้งานหลัก</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <tr>
+                                        <td class="p-2.5 font-semibold text-slate-900">Windows (10/11)</td>
+                                        <td class="p-2.5"><span class="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold">Proprietary</span></td>
+                                        <td class="p-2.5">ใช้งานทั่วไปในองค์กร ซัพพอร์ตซอฟต์แวร์และเกมหลากหลาย ไดรฟ์เวอร์สมบูรณ์</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-semibold text-slate-900">Ubuntu / Linux</td>
+                                        <td class="p-2.5"><span class="px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[10px] font-bold">Open Source</span></td>
+                                        <td class="p-2.5">ซอร์สโค้ดเปิดเสรี เสถียรภาพสูง นิยมใช้ทำ Server, Cloud, Container และงานพัฒนาซอฟต์แวร์</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-2.5 font-semibold text-slate-900">macOS / iOS</td>
+                                        <td class="p-2.5"><span class="px-2 py-0.5 bg-rose-100 text-rose-700 rounded text-[10px] font-bold">Proprietary</span></td>
+                                        <td class="p-2.5">ออกแบบเฉพาะอุปกรณ์ Apple มีความปลอดภัยสูง ระบบ Ecosystem ทำงานสอดประสานกันดีเยี่ยม</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Card 1.2: Boot Process & Firmware -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-power-off text-blue-600"></i> 1.2 เฟิร์มแวร์ และกระบวนการบูตเครื่อง (Firmware & Boot Sequence)
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                            <div class="space-y-2 border-l-2 border-amber-400 pl-3">
+                                <h5 class="font-bold text-slate-900">Legacy BIOS + MBR</h5>
+                                <p class="text-slate-600">เฟิร์มแวร์รุ่นเก่า ทำงานแบบ 16-bit รองรับดิสก์พาร์ทิชันแบบ MBR (Master Boot Record) ซึ่งจำกัดขนาดดิสก์ไว้ไม่เกิน 2TB และแบ่ง Primary Partition ได้สูงสุด 4 พาร์ทิชัน</p>
+                            </div>
+                            <div class="space-y-2 border-l-2 border-emerald-500 pl-3">
+                                <h5 class="font-bold text-slate-900">UEFI + GPT (มาตรฐานปัจจุบัน)</h5>
+                                <p class="text-slate-600">เฟิร์มแวร์ทันสมัย รองรับดิสก์ GPT (GUID Partition Table) ที่ความจุเกิน 2TB ได้ ทำงานเร็ว มีความปลอดภัยสูงด้วยระบบ <strong>Secure Boot</strong> ป้องกันการแอบโหลด Rootkit/Malware ขณะเปิดเครื่อง</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2 text-xs">
+                            <span class="font-bold text-slate-800 block">ลำดับกระบวนการเปิดเครื่อง (Booting Steps):</span>
+                            <ol class="list-decimal list-inside space-y-1 text-slate-600">
+                                <li><strong>Power On Supply:</strong> จ่ายไฟเข้า เมนบอร์ดและ CPU เริ่มทำงาน</li>
+                                <li><strong>POST (Power-On Self-Test):</strong> BIOS/UEFI ตรวจสอบฮาร์ดแวร์พื้นฐาน (RAM, GPU, Keyboard, Storage) หากพบปัญหาจะส่งเสียง Beep Code</li>
+                                <li><strong>Boot Device Selection:</strong> BIOS/UEFI ค้นหาอุปกรณ์บูตตามลำดับ <em>Boot Order</em> ที่ตั้งไว้ (เช่น NVMe SSD, USB Flash Drive, Network)</li>
+                                <li><strong>OS Bootloader Loading:</strong> อ่านโค้ด Bootloader (เช่น Windows Boot Manager หรือ GRUB) เข้าสู่หน่วยความจำเพื่อเริ่มโหลด Kernel ของ OS</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 2: FILE SYSTEMS & STORAGE -->
+            <section id="mod-storage" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center font-bold">2</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">ระบบไฟล์และการจัดเก็บข้อมูล (Storage & File Systems)</h3>
+                        <p class="text-xs text-slate-500">การจัดพาร์ทิชัน โครงสร้างระบบไฟล์ ความปลอดภัย และกลยุทธ์การสำรองข้อมูล</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- File Systems Comparison -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-folder-tree text-purple-600"></i> 2.1 ตารางเปรียบเทียบระบบไฟล์ (File Systems)
+                        </h4>
+                        <div class="space-y-3 text-xs">
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex justify-between font-bold text-slate-900 mb-1">
+                                    <span>NTFS (New Technology File System)</span>
+                                    <span class="text-purple-700">Windows OS Main</span>
+                                </div>
+                                <p class="text-slate-600">ระบบไฟล์หลักของ Windows รองรับสิทธิ์เข้าถึง (NTFS Permissions), การบีบอัดไฟล์, File Encryption และระบบ Journaling ป้องกันไฟล์เสียเมื่อไฟดับ</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex justify-between font-bold text-slate-900 mb-1">
+                                    <span>FAT32 / exFAT</span>
+                                    <span class="text-slate-500">Cross-Platform</span>
+                                </div>
+                                <p class="text-slate-600">FAT32 ใช้กับ Flash Drive ทั่วไป (จำกัดไฟล์เดี่ยวไม่เกิน 4GB), exFAT ปลดล็อกขีดจำกัดไฟล์ ใช้สำรองข้อมูลข้ามระบบปฏิบัติการ (Windows/macOS)</p>
+                            </div>
+                            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex justify-between font-bold text-slate-900 mb-1">
+                                    <span>EXT4 / APFS</span>
+                                    <span class="text-slate-500">Linux / macOS</span>
+                                </div>
+                                <p class="text-slate-600">EXT4 เป็นมาตรฐานของ Linux สถิติด้านความเร็วและ Journaling สูง / APFS ออกแบบมาสำหรับ SSD บน macOS โดยเฉพาะ</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security, SMART & Backup -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-purple-600"></i> 2.2 ความปลอดภัยและการบำรุงรักษาสื่อจัดเก็บข้อมูล
+                        </h4>
+                        <ul class="space-y-3 text-xs text-slate-600">
+                            <li class="p-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+                                <strong class="text-purple-900 font-bold block mb-0.5">BitLocker Drive Encryption</strong>
+                                ฟีเจอร์เข้ารหัสดิสก์ระดับฮาร์ดแวร์/ซอฟต์แวร์บน Windows ป้องกันไม่ให้แฮกเกอร์ควัก SSD ออกไปต่อเครื่องอื่นเพื่อขโมยข้อมูลเมื่อโน้ตบุ๊กสูญหาย
+                            </li>
+                            <li class="p-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+                                <strong class="text-purple-900 font-bold block mb-0.5">S.M.A.R.T. Monitoring</strong>
+                                ระบบแจ้งเตือนสุขภาพไดรฟ์ (Self-Monitoring, Analysis and Reporting Technology) หากตรวจพบ <em>SMART Warning</em> ต้องรีบสำรองข้อมูลทันทีเพราะดิสก์ใกล้พัง
+                            </li>
+                            <li class="p-3 bg-purple-50/50 border border-purple-100 rounded-xl">
+                                <strong class="text-purple-900 font-bold block mb-0.5">หลักการสำรองข้อมูล 3-2-1 Rule</strong>
+                                มีข้อมูลอย่างน้อย <strong>3 สำเนา</strong>, เก็บในสื่อต่างชนิดกัน <strong>2 ประเภท</strong> (เช่น SSD External + NAS), และมี <strong>1 สำเนา</strong> เก็บไว้นอกสถานที่ (Off-site / Cloud Backup)
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 3: CLI COMMANDS & WINDOWS UTILITIES -->
+            <section id="mod-cli" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">3</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">คำสั่ง CLI และเครื่องมือ Windows (CLI & Utilities)</h3>
+                        <p class="text-xs text-slate-500">สรุปคู่คำสั่ง Command Prompt, PowerShell และเครื่องมือช่างสำหรับวิเคราะห์ระบบ</p>
+                    </div>
+                </div>
+
+                <!-- CLI Table -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                    <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-code text-emerald-600"></i> 3.1 สรุปชุดคำสั่ง CLI (Command Line Reference)
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600 border-collapse">
+                            <thead>
+                                <tr class="bg-slate-900 text-emerald-400 font-mono">
+                                    <th class="p-3">คำสั่ง (Command)</th>
+                                    <th class="p-3">วัตถุประสงค์และการใช้งาน</th>
+                                    <th class="p-3">ตัวอย่างการใช้งาน / สวิตช์</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 font-sans">
+                                <tr>
+                                    <td class="p-3 font-mono font-bold text-brand-700 bg-slate-50">ipconfig</td>
+                                    <td class="p-3">ตรวจสอบการตั้งค่า IP Address, Subnet Mask และ Gateway</td>
+                                    <td class="p-3 font-mono text-slate-700">ipconfig /all<br><span class="text-[11px] text-slate-500">(ดูรายละเอียด MAC & DHCP)</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-bold text-brand-700 bg-slate-50">sfc</td>
+                                    <td class="p-3">System File Checker - ตรวจสอบและซ่อมแซมไฟล์ระบบ Windows ที่เสียหายโดยอัตโนมัติ</td>
+                                    <td class="p-3 font-mono text-slate-700">sfc /scannow</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-bold text-brand-700 bg-slate-50">chkdsk</td>
+                                    <td class="p-3">Check Disk - ตรวจสอบโครงสร้างระบบไฟล์และ Bad Sector บนฮาร์ดดิสก์</td>
+                                    <td class="p-3 font-mono text-slate-700">chkdsk c: /f /r</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-mono font-bold text-brand-700 bg-slate-50">ping</td>
+                                    <td class="p-3">ส่งแพ็กเกจ ICMP ทดสอบการติดต่อกับอุปกรณ์เป้าหมายในเครือข่าย</td>
+                                    <td class="p-3 font-mono text-slate-700">ping 127.0.0.1 (Loopback)<br>ping 192.168.1.1 (Gateway)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Windows GUI Utilities -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-chart-line text-emerald-600"></i> Task Manager
+                        </div>
+                        <p class="text-slate-600">ตรวจสอบภาระงาน CPU, RAM, Disk (กรณี 100% Usage) รวมถึงบริหารจัดการ <strong>Startup Apps</strong> เพื่อลดระยะเวลาเปิดเครื่อง</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Device Manager
+                        </div>
+                        <p class="text-slate-600">ศูนย์จัดการ Driver ฮาร์ดแวร์ ตรวจจับเครื่องหมายตกใจสีเหลือง (Driver ปัญหา) และสั่งทำ <strong>Roll Back Driver</strong> ย้อนเวอร์ชัน</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                        <div class="font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-list-ul text-blue-600"></i> Event Viewer
+                        </div>
+                        <p class="text-slate-600">ระบบบันทึก Log เหตุการณ์ย้อนหลัง (System, Application, Security) เพื่อวิเคราะห์หาสาเหตุอาการ Blue Screen หรือเครื่องดับสุ่ม</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 4: NETWORKING & IP CONFIGURATION -->
+            <section id="mod-network" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold">4</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">ระบบเครือข่ายและการตั้งค่า IP (Networking & IP Configuration)</h3>
+                        <p class="text-xs text-slate-500">การวิเคราะห์พารามิเตอร์เครือข่าย DHCP, DNS และการวิเคราะห์ปัญหาการเชื่อมต่อ</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
+                    <!-- IP Architecture -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-network-wired text-teal-600"></i> 4.1 พารามิเตอร์พื้นฐานของ IPv4
+                        </h4>
+                        <ul class="space-y-2 text-slate-600">
+                            <li class="p-2 bg-slate-50 rounded-lg"><strong>IP Address:</strong> หมายเลขประจำเครื่องในระบบเครือข่าย (เช่น 192.168.1.50)</li>
+                            <li class="p-2 bg-slate-50 rounded-lg"><strong>Subnet Mask:</strong> ตัวแบ่งแยกส่วน Network ID และ Host ID (เช่น 255.255.255.0)</li>
+                            <li class="p-2 bg-slate-50 rounded-lg"><strong>Default Gateway:</strong> IP ของ Router ทำหน้าที่เป็นประตูทางออกสู่อินเทอร์เน็ตภายนอกองค์กร</li>
+                            <li class="p-2 bg-slate-50 rounded-lg"><strong>DNS Server:</strong> ระบบแปลงชื่อเว็บไซต์ (Domain Name เช่น google.com) เป็น IP Address</li>
+                        </ul>
+                    </div>
+
+                    <!-- Critical Troubleshooting Cases -->
+                    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-bug text-teal-600"></i> 4.2 อาการและจุดวิเคราะห์ปัญหา Network ที่พบบ่อย
+                        </h4>
+                        <div class="space-y-2">
+                            <div class="p-2.5 bg-rose-50 border border-rose-200 rounded-lg">
+                                <span class="font-bold text-rose-900 block">ได้ IP 169.254.x.x (APIPA)</span>
+                                <p class="text-slate-600">แสดงว่าเครื่องติดต่อแจก IP จาก <strong>DHCP Server ไม่ได้</strong> (สายแลนหลวม, Wifi หลุด หรือ DHCP Server ล่ม)</p>
+                            </div>
+                            <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg">
+                                <span class="font-bold text-amber-900 block">Ping IP ได้ แต่เปิดเว็บด้วยชื่อโดเมนไม่ได้</span>
+                                <p class="text-slate-600">ปัญหาเกิดจาก <strong>DNS Server มีปัญหา/ตั้งค่าผิด</strong> (เนื่องจากสื่อสารด้วย IP ตัวเลขได้ปกติ แต่แปลงชื่อเป็น IP ไม่สำเร็จ)</p>
+                            </div>
+                            <div class="p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+                                <span class="font-bold text-blue-900 block">เข้าเว็บภายในได้ แต่เข้าเว็บภายนอกไม่ได้</span>
+                                <p class="text-slate-600">ปัญหาเกิดจาก <strong>Default Gateway หรือเส้นทางเชื่อมต่อ Internet ออกนอกองค์กร</strong> มีอุปสรรค</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 5: HARDWARE & SAFETY MAINTENANCE -->
+            <section id="mod-hardware" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold">5</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">ฮาร์ดแวร์ การบำรุงรักษา และความปลอดภัย (Hardware & Safety)</h3>
+                        <p class="text-xs text-slate-500">ไฟฟ้าสถิต (ESD) ระบบระบายความร้อน การวิเคราะห์สัญญาณเตือน Beep Code และ RAM</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                    <!-- ESD & Safety -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm">ESD & Safety Standards</h4>
+                        <p class="text-slate-600 leading-relaxed">
+                            <strong>ESD (Electrostatic Discharge)</strong> คือการคายประจุไฟฟ้าสถิตจากร่างกายมนุษย์สู่อุปกรณ์อิเล็กทรอนิกส์ ซึ่งทำความเสียหายชิปเซ็ตได้<br><br>
+                            <strong>ข้อปฏิบัติ:</strong> ดับไฟ ถอดปลั๊ก สวมสายรัดข้อมือกันไฟฟ้าสถิต (Anti-static Wrist Strap) ก่อนแตะต้องอุปกรณ์ภายใน
+                        </p>
+                    </div>
+
+                    <!-- Thermal Management -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-temperature-high"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm">Thermal Management</h4>
+                        <p class="text-slate-600 leading-relaxed">
+                            เมื่อประมวลผลหนัก อุณหภูมิ CPU จะสูงขึ้น หากชุดระบายความร้อนหรือซิลิโคนเสื่อม ระบบจะสั่ง **Thermal Throttling** หรือดับเครื่องอัตโนมัติเพื่อป้องกัน CPU ไหม้<br><br>
+                            <strong>การบำรุงรักษา:</strong> ทำความสะอาดฝุ่นพัดลม ทา Thermal Paste ใหม่เป็นระยะ
+                        </p>
+                    </div>
+
+                    <!-- Power Protection & POST -->
+                    <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                            <i class="fa-solid fa-plug"></i>
+                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm">UPS & POST Diagnostics</h4>
+                        <p class="text-slate-600 leading-relaxed">
+                            <strong>UPS (Uninterruptible Power Supply):</strong> สำรองไฟชั่วคราวและปรับแรงดันไฟให้คงที่ ป้องกันความเสียหายจากไฟดับกะทันหัน<br><br>
+                            <strong>Beep Code:</strong> รหัสเสียงแจ้งเตือนจาก BIOS เมื่อเกิดข้อผิดพลาดระดับฮาร์ดแวร์ก่อนแสดงภาพขึ้นจอ (เช่น RAM หรือ GPU หลวม/เสีย)
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MODULE 6: TROUBLESHOOTING METHODOLOGY -->
+            <section id="mod-troubleshoot" class="content-module space-y-6">
+                <div class="flex items-center gap-3 border-b border-slate-200 pb-3">
+                    <div class="w-9 h-9 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center font-bold">6</div>
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-900">กระบวนการแก้ไขปัญหาเชิงระบบ (Systematic Troubleshooting Process)</h3>
+                        <p class="text-xs text-slate-500">แนวปฏิบัติมาตรฐาน 6 ขั้นตอนของ CompTIA A+ สำหรับช่างเทคนิคไอทีมืออาชีพ</p>
+                    </div>
+                </div>
+
+                <!-- 6 Steps CompTIA Troubleshooting -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-6">
+                    <h4 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-rose-600"></i> กระบวนการแก้ปัญหา 6 ขั้นตอนมาตรฐาน (CompTIA A+ Standard)
+                    </h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 1: เก็บข้อมูลอาการ (Identify the Problem)</span>
+                            <p class="text-slate-600">สอบถามอาการจากผู้ใช้ สังเกตสิ่งผิดปกติ ตรวจสอบ Log และทำ **Backup ข้อมูลสำคัญ** ของผู้ใช้ก่อนแตะต้องระบบเสมอ</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 2: ตั้งสมมติฐานสาเหตุ (Establish Theory)</span>
+                            <p class="text-slate-600">วิเคราะห์หาสาเหตุที่เป็นไปได้มากที่สุด โดยเริ่มจากสิ่งที่พื้นฐานที่สุดก่อน (เช่น ปลั๊กไฟ, สายเชื่อมต่อ, สวิตช์)</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 3: ทดสอบสมมติฐาน (Test the Theory)</span>
+                            <p class="text-slate-600">ทดสอบข้อสมมติฐานทีละประเด็น หากทดสอบแล้วไม่ตรง ให้ตั้งสมมติฐานใหม่เพื่อจำกัดขอบเขตปัญหา</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 4: วางแผนและดำเนินการแก้ไข (Plan & Implement)</span>
+                            <p class="text-slate-600">สร้างแผนการแก้ไขโดยคำนึงถึงผลกระทบข้างเคียงและปฏิบัติตามแผนเพื่อขจัดปัญหานั้น</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 5: ยืนยันผลการแก้ไข (Verify System Functionality)</span>
+                            <p class="text-slate-600">ทดสอบการทำงานของระบบแบบเต็มรูปแบบ เพื่อให้แน่ใจว่าปัญหาหายขาดและไม่เกิดอาการข้างเคียง พร้อมวางแนวทางป้องกัน</p>
+                        </div>
+                        <div class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                            <span class="font-bold text-rose-700 block">ขั้นที่ 6: บันทึกข้อมูล (Document Findings)</span>
+                            <p class="text-slate-600">บันทึกอาการ สาเหตุ และขั้นตอนการแก้ปัญหาลงในระบบ Ticket / Knowledge base เพื่อใช้อ้างอิงในอนาคต</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Practical Troubleshooting Decision Tree -->
+                <div class="bg-slate-900 text-white p-6 rounded-2xl border border-slate-800 space-y-4 text-xs">
+                    <h4 class="text-sm font-bold text-brand-400 flex items-center gap-2">
+                        <i class="fa-solid fa-diagram-project"></i> ผังการวิเคราะห์อาการเสียยอดฮิต (Quick Diagnostic Matrix)
+                    </h4>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-slate-800 p-3.5 rounded-xl border border-slate-700 space-y-2">
+                            <span class="font-bold text-rose-400 block"><i class="fa-solid fa-power-off"></i> เครื่องเปิดไม่ติด ไฟไม่เข้า</span>
+                            <ol class="list-disc list-inside space-y-1 text-slate-300">
+                                <li>เช็คเต้ารับ ปลั๊กไฟ และสายไฟ PSU</li>
+                                <li>ทดสอบ Power Supply Unit (PSU)</li>
+                                <li>ตรวจสอบสาย Front Panel บนเมนบอร์ด</li>
+                            </ol>
+                        </div>
+                        <div class="bg-slate-800 p-3.5 rounded-xl border border-slate-700 space-y-2">
+                            <span class="font-bold text-amber-400 block"><i class="fa-solid fa-desktop"></i> พัดลมหมุน จอดำ Beep Code ดัง</span>
+                            <ol class="list-disc list-inside space-y-1 text-slate-300">
+                                <li>ถอด RAM มาทำความสะอาดหน้าสัมผัส</li>
+                                <li>เช็คการ์ดจอ (GPU) ว่าเสียบแน่นหรือไม่</li>
+                                <li>ฟังจำนวนเสียงสั้น/ยาว แปลความหมายตามคู่มือเมนบอร์ด</li>
+                            </ol>
+                        </div>
+                        <div class="bg-slate-800 p-3.5 rounded-xl border border-slate-700 space-y-2">
+                            <span class="font-bold text-emerald-400 block"><i class="fa-solid fa-spinner"></i> เครื่องช้า Disk 100%</span>
+                            <ol class="list-disc list-inside space-y-1 text-slate-300">
+                                <li>เช็ค Process ใน Task Manager</li>
+                                <li>ตรวจสุขภาพฮาร์ดดิสก์ด้วย SMART</li>
+                                <li>พิจารณาอัปเกรด HDD เป็น NVMe/SATA SSD</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 border-t border-slate-800 py-6 mt-12 text-xs">
+        <div class="max-w-7xl mx-auto px-4 text-center space-y-1">
+            <p class="font-medium text-slate-300">ศูนย์เรียนรู้โครงสร้างระบบคอมพิวเตอร์และคู่มือแก้ปัญหาไอที (Strictly Knowledge Content)</p>
+            <p>ออกแบบสำหรับการศึกษา ทบทวนทฤษฎี และพัฒนาทักษะวิศวกรรมคอมพิวเตอร์เชิงลึก</p>
+        </div>
+    </footer>
+
+    <!-- Interactive JavaScript -->
+    <script>
+        // Section Switching Engine
+        function switchSection(sectionId) {
+            const modules = document.querySelectorAll('.content-module');
+            const navItems = document.querySelectorAll('.nav-item');
+
+            // Reset active states for navigation buttons
+            navItems.forEach(item => item.classList.remove('active'));
+            const activeNav = document.getElementById(`btn-${sectionId}`);
+            if (activeNav) activeNav.classList.add('active');
+
+            if (sectionId === 'mod-all') {
+                modules.forEach(mod => mod.classList.remove('hidden'));
+            } else {
+                modules.forEach(mod => {
+                    if (mod.id === sectionId) {
+                        mod.classList.remove('hidden');
+                    } else {
+                        mod.classList.add('hidden');
+                    }
+                });
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleMobileNav() {
+            document.getElementById('mobile-nav').classList.toggle('hidden');
+        }
+
+        // Global Keyword Search Filter
+        function handleGlobalSearch() {
+            const query = document.getElementById('global-search').value.toLowerCase().trim();
+            const searchStatus = document.getElementById('search-status');
+            const searchKeyword = document.getElementById('search-keyword');
+            const modules = document.querySelectorAll('.content-module');
+
+            if (query === '') {
+                searchStatus.classList.add('hidden');
+                modules.forEach(mod => mod.classList.remove('hidden'));
+                return;
+            }
+
+            searchStatus.classList.remove('hidden');
+            searchKeyword.innerText = query;
+
+            // Show modules that match text
+            modules.forEach(mod => {
+                const text = mod.innerText.toLowerCase();
+                if (text.includes(query)) {
+                    mod.classList.remove('hidden');
+                } else {
+                    mod.classList.add('hidden');
+                }
+            });
+        }
+
+        function clearSearch() {
+            document.getElementById('global-search').value = '';
+            handleGlobalSearch();
+        }
+    </script>
+</body>
+</html>
